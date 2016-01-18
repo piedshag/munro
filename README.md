@@ -3,6 +3,10 @@ a p2p live streaming protocol inspired by [ppspp](https://tools.ietf.org/html/rf
 
 [![travis](https://travis-ci.org/piedshag/munro.svg?branch=master)](https://travis-ci.org/piedshag/munro)
 
+```
+npm install munro
+```
+
 ## Usage
 
 First someone must create some data

@@ -70,7 +70,7 @@ munro will sign and broadcast the data to connected peers.
 
 if connected peers have index munro will attempt to download the data.
 
-#### ``munro.destroy()`
+#### `munro.destroy()`
 
 will destroy all peers and callback error to pending callbacks.
 

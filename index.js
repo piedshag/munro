@@ -7,6 +7,7 @@ var bufferEquals = require('buffer-equals')
 var eos = require('end-of-stream')
 var bitfield = require('bitfield')
 var debug = require('debug')('munro')
+var stream = require('stream')
 
 var protocol = require('./lib/protocol')
 
@@ -56,7 +57,7 @@ Munro.prototype.broadcast = function (data) {
     var digest = hash.digest()
 
     var signature = signatures.sign(digest, self.keypair.secretKey)
-    self.signatures[index] = signature
+    self.signatures[flat.parent(treeIndex)] = signature
 
     for (var n = 0; n < 2; n++) {
       self.have(index - n)
@@ -74,8 +75,9 @@ Munro.prototype.have = function (block) {
 Munro.prototype.get = function (index, cb) {
   var self = this
   if (!cb) cb = noop
-  var available = self._getpeers(index)
 
+  if (self.blocks[index]) return cb(null, self.blocks[index])
+  var available = self._getpeers(index)
   if (available === -1) {
     self.pending.push([index, cb])
     return
@@ -95,7 +97,7 @@ Munro.prototype.get = function (index, cb) {
     var children = flat.children(flat.parent(treeIndex))
 
     if (children[1] === treeIndex) hash = createHash().update(other).update(data.block).digest()
-    else hash = createHash().update(data.block).update(other).digest()
+    if (children[0] === treeIndex) hash = createHash().update(data.block).update(other).digest()
     var verified = signatures.verify(hash, signature, self.id)
 
     if (!verified) return debug('unable to verify block ' + data.index)
@@ -189,6 +191,17 @@ Munro.prototype.update = function () {
   }
 }
 
+Munro.prototype.writeStream = function () {
+  var self = this
+  var ws = stream.Writable()
+  ws._write = function (chunk, enc, next) {
+    self.broadcast(chunk)
+    next()
+  }
+
+  return ws
+}
+
 Munro.prototype.destroy = function (err) {
   var self = this
   for (var i = 0; i < self.peers.length; i++) {
@@ -201,3 +214,9 @@ function createHash () {
 }
 
 function noop () {}
+
+var mro = module.exports()
+var ws = mro.writeStream()
+
+ws.write('yoyo')
+ws.write('what')

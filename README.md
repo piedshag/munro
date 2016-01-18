@@ -78,6 +78,10 @@ if connected peers have index munro will attempt to download the data.
 
 will destroy all peers and callback error to pending callbacks.
 
+#### `var ws = munro.writeStream()`
+
+instead of broadcasting every block. just write it to the stream
+
 ## How does this even work?
 
 Good question. When content is `broadcast` to the network it is only done so in peers look at the example below.

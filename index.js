@@ -18,6 +18,7 @@ var DEFAULT_BITFIELD = {grow: Infinity}
 function Munro (id, opts) {
   var self = this
   if (!(self instanceof Munro)) return new Munro(id, opts)
+  if (!opts) opts = {}
 
   self.keypair = id ? {publicKey: id} : signatures.keyPair()
   self.id = self.keypair.publicKey
@@ -26,6 +27,7 @@ function Munro (id, opts) {
   self.signatures = []
   self.peers = []
   self.pending = []
+  self.discard = opts.discard || 20
 
   self.head = -1
   self.streaming = false
@@ -73,6 +75,8 @@ Munro.prototype.have = function (block) {
   for (var i = 0; i < self.peers.length; i++) {
     self.peers[i].have({ index: block })
   }
+  if (block > self.head) self.head = block
+  if (self.head > self.discard) self.blocks = self.blocks.slice(self.head - self.discard, self.head)
 }
 
 Munro.prototype.get = function (index, cb) {
@@ -89,36 +93,13 @@ Munro.prototype.get = function (index, cb) {
   var peer = self.peers[available]
   peer.request({ index: index }, function (err, data) {
     if (err) return cb(err, null)
-
-    // todo export to verify function and cache digest
-
-    var signature = data.proof[0]
-    var other = data.proof[1]
-    var hash = null
-
-    var treeIndex = flat.index(0, data.index)
-    var children = flat.children(flat.parent(treeIndex))
-
-    if (children[1] === treeIndex) hash = createHash().update(other).update(data.block).digest()
-    if (children[0] === treeIndex) hash = createHash().update(data.block).update(other).digest()
-    var verified = signatures.verify(hash, signature, self.id)
-
-    if (!verified) return debug('unable to verify block ' + data.index)
-    debug('verified block number ' + data.index)
-    self.blocks[data.index] = data.block
-    self.signatures[flat.parent(data.index)] = signature
-
-    self.emit('download', data.index, data.block)
-
-    self.head = data.index
-
-    cb(null, {data: data.block, index: data.index})
+    self._verify(data, cb)
   })
 }
 
 Munro.prototype.peerStream = function () {
   var self = this
-  var stream = protocol({ id: self.id })
+  var stream = protocol({ id: self.id, discard: self.discard })
 
   debug('new peer stream')
 
@@ -131,6 +112,7 @@ Munro.prototype.peerStream = function () {
     if (!bufferEquals(data.id, self.id)) return stream.destroy('must have the same id')
     self.peers.push(stream)
 
+    stream.discard = data.discard
     stream.blocks = bitfield(1, DEFAULT_BITFIELD)
     if (!self.blocks.length) return
     for (var i = 0; i < self.blocks.length; i++) {
@@ -158,7 +140,7 @@ Munro.prototype.peerStream = function () {
     stream.response({
       id: data.id,
       index: data.index,
-      proof: [signature, self.blocks[sibling].toString()],
+      proof: [signature, self.blocks[sibling]],
       block: self.blocks[data.index]
     })
 
@@ -190,6 +172,32 @@ Munro.prototype._updatestream = function (index) {
     if (err) return self.stream.push(null)
     self.stream.push(block.data)
   })
+}
+
+Munro.prototype._verify = function (data, cb) {
+  var self = this
+
+  var signature = data.proof[0]
+  var other = data.proof[1]
+  var hash = null
+
+  var treeIndex = flat.index(0, data.index)
+  var children = flat.children(flat.parent(treeIndex))
+
+  if (children[1] === treeIndex) hash = createHash().update(other).update(data.block).digest()
+  if (children[0] === treeIndex) hash = createHash().update(data.block).update(other).digest()
+  var verified = signatures.verify(hash, signature, self.id)
+
+  if (!verified) return debug('unable to verify block ' + data.index)
+  debug('verified block number ' + data.index)
+  self.blocks[data.index] = data.block
+  self.signatures[flat.parent(data.index)] = signature
+
+  self.emit('download', data.index, data.block)
+
+  self.head = data.index
+
+  cb(null, {data: data.block, index: data.index})
 }
 
 Munro.prototype.update = function (number) {

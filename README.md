@@ -1,5 +1,5 @@
 # munro
-a p2p live streaming protocol inspired by [ppspp](https://tools.ietf.org/html/rfc7574) and named after [munro](https://tools.ietf.org/html/rfc7574#section-6.1.2.1). The protocol is completely transport agnostic so it will work wherever you put it. Still a work in progress i need to add some more streams eg. createReadStream()
+a p2p live streaming protocol inspired by [ppspp](https://tools.ietf.org/html/rfc7574) and named after [munro](https://tools.ietf.org/html/rfc7574#section-6.1.2.1). The protocol is completely transport agnostic so it will work wherever you put it.
 
 [![travis](https://travis-ci.org/piedshag/munro.svg?branch=master)](https://travis-ci.org/piedshag/munro)
 
@@ -80,7 +80,11 @@ will destroy all peers and callback error to pending callbacks.
 
 #### `var ws = munro.writeStream()`
 
-instead of broadcasting every block. just write it to the stream
+instead of broadcasting every block. just write it to the stream.
+
+#### `var rs = munro.readStream()`
+
+read all the blocks when they become available and pipe them onwards
 
 ## How does this even work?
 

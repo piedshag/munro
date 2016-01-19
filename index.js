@@ -25,8 +25,10 @@ function Munro (id, opts) {
   self.blocks = []
   self.signatures = []
   self.peers = []
-
   self.pending = []
+
+  self.head = -1
+  self.streaming = false
 
   events.EventEmitter.call(self)
 }
@@ -107,6 +109,8 @@ Munro.prototype.get = function (index, cb) {
 
     self.emit('download', data.index, data.block)
 
+    self.head = data.index
+
     cb(null, data.block)
   })
 }
@@ -134,7 +138,7 @@ Munro.prototype.peerStream = function () {
   })
 
   stream.on('have', function (data) {
-    debug('updating swarm head to', data.index)
+    debug('updating stream head to ' + data.index)
 
     if (data.index > self.available) self.available = data.index
     if (data.index > stream.head) stream.head = data.index
@@ -167,19 +171,27 @@ Munro.prototype._getpeers = function (index) {
   var self = this
   var selected = -1
   var found = 1
-
   for (var i = 0; i < self.peers.length; i++) {
     var p = self.peers[i]
     if (p && p.blocks && p.blocks.get(index)) {
       if (Math.random() < (1 / found++)) selected = i
     }
   }
-
   return selected
 }
 
-Munro.prototype.update = function () {
+Munro.prototype._updatestream = function (index) {
   var self = this
+  self.get(index, function (err, block) {
+    if (err) self.destroy(err)
+    self.stream.push(block)
+  })
+}
+
+Munro.prototype.update = function (number) {
+  var self = this
+  if (self.streaming) self._updatestream(number)
+
   for (var i = 0; i < self.pending.length; i++) {
     var index = self.pending[i][0]
     var cb = self.pending[i][1]
@@ -193,13 +205,24 @@ Munro.prototype.update = function () {
 
 Munro.prototype.writeStream = function () {
   var self = this
+  debug('new write stream created')
   var ws = stream.Writable()
   ws._write = function (chunk, enc, next) {
     self.broadcast(chunk)
     next()
   }
-
   return ws
+}
+
+Munro.prototype.readStream = function () {
+  var self = this
+  debug('new read stream created')
+  self.streaming = true
+  var rs = stream.Readable()
+  rs._read = function () {}
+  self.stream = rs
+
+  return rs
 }
 
 Munro.prototype.destroy = function (err) {
@@ -214,9 +237,3 @@ function createHash () {
 }
 
 function noop () {}
-
-var mro = module.exports()
-var ws = mro.writeStream()
-
-ws.write('yoyo')
-ws.write('what')

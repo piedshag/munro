@@ -39,7 +39,7 @@ var munro = require('munro')
 var disc = require('discovery-channel')()
 var net = require('net')
 
-var mro = munro()
+var mro = munro(id-from-example-above)
 
 var server = net.createServer(function (socket) {
   socket.pipe(mro.peerStream()).pipe(socket)

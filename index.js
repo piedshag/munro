@@ -29,6 +29,7 @@ function Munro (id, opts) {
 
   self.head = -1
   self.streaming = false
+  self.streamhead = -1
 
   events.EventEmitter.call(self)
 }
@@ -111,7 +112,7 @@ Munro.prototype.get = function (index, cb) {
 
     self.head = data.index
 
-    cb(null, data.block)
+    cb(null, {data: data.block, index: data.index})
   })
 }
 
@@ -182,9 +183,12 @@ Munro.prototype._getpeers = function (index) {
 
 Munro.prototype._updatestream = function (index) {
   var self = this
+  if (index !== self.streamhead + 1) return // ensure blocks are in proper order
+  self.streamhead = self.streamhead + 1
+
   self.get(index, function (err, block) {
-    if (err) self.destroy(err)
-    self.stream.push(block)
+    if (err) return self.stream.push(null)
+    self.stream.push(block.data)
   })
 }
 
@@ -221,7 +225,6 @@ Munro.prototype.readStream = function () {
   var rs = stream.Readable()
   rs._read = function () {}
   self.stream = rs
-
   return rs
 }
 

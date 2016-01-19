@@ -14,7 +14,7 @@ tape('test get block', function (t) {
 
   test1.get(0, function (err, block) {
     if (err) t.end(err)
-    t.same(new Buffer('hello'), block)
+    t.same(new Buffer('hello'), block.data)
     t.end()
   })
 })
@@ -34,7 +34,7 @@ tape('writeable stream', function (t) {
 
   test1.get(3, function (err, block) {
     if (err) t.end(err)
-    t.same(block, new Buffer('is'))
+    t.same(block.data, new Buffer('is'))
     t.end()
   })
 })

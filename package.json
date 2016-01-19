@@ -1,6 +1,6 @@
 {
   "name": "munro",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "p2p live streaming protocol",
   "main": "index.js",
   "scripts": {

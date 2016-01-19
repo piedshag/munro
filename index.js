@@ -27,7 +27,7 @@ function Munro (id, opts) {
   self.signatures = []
   self.peers = []
   self.pending = []
-  self.discard = opts.discard || 20
+  self.discard = opts.discard || 20 // only keep 20 most recent blocks
 
   self.head = -1
   self.streaming = false
@@ -125,6 +125,7 @@ Munro.prototype.peerStream = function () {
 
     if (data.index > self.available) self.available = data.index
     if (data.index > stream.head) stream.head = data.index
+    if (data.index > stream.discard) stream.blocks.set(data.index - stream.discard, false)
 
     stream.blocks.set(data.index)
     self.update(data.index)
@@ -160,6 +161,7 @@ Munro.prototype._getpeers = function (index) {
       if (Math.random() < (1 / found++)) selected = i
     }
   }
+  console.log(selected)
   return selected
 }
 

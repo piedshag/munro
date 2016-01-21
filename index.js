@@ -161,7 +161,6 @@ Munro.prototype._getpeers = function (index) {
       if (Math.random() < (1 / found++)) selected = i
     }
   }
-  console.log(selected)
   return selected
 }
 

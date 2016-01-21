@@ -2,6 +2,7 @@
 a p2p live streaming protocol inspired by [ppspp](https://tools.ietf.org/html/rfc7574) and named after [munro](https://tools.ietf.org/html/rfc7574#section-6.1.2.1). The protocol is completely transport agnostic so it will work wherever you put it.
 
 [![travis](https://travis-ci.org/piedshag/munro.svg?branch=master)](https://travis-ci.org/piedshag/munro)
+
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
 
 ```

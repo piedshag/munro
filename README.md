@@ -1,5 +1,5 @@
 # munro
-a p2p live streaming protocol inspired by [ppspp](https://tools.ietf.org/html/rfc7574) and named after [munro](https://tools.ietf.org/html/rfc7574#section-6.1.2.1). The protocol is completely transport agnostic so it will work wherever you put it.
+a p2p live streaming protocol inspired by [ppspp](https://tools.ietf.org/html/rfc7574) and named after [munro](https://tools.ietf.org/html/rfc7574#section-6.1.2.1). The protocol is completely transport agnostic so it will work wherever you put it. Good for live streaming not so good for sharing static content because munro hashes require at least 2 child blocks.
 
 [![travis](https://travis-ci.org/piedshag/munro.svg?branch=master)](https://travis-ci.org/piedshag/munro)
 
